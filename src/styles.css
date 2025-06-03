@@ -1,0 +1,17 @@
+/* src/styles.css */
+nav {
+  padding: 1rem;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  gap: 1.5rem;
+}
+
+nav a {
+  text-decoration: none;
+  color: black;
+}
+
+nav a.active {
+  font-weight: bold;
+  color: green;
+}
