@@ -1,37 +1,47 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    // Проверяем localStorage при загрузке
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const login = async (email, password) => {
+    const response = await fetch('http://localhost:8000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Ошибка входа');
+    }
+
+    const data = await response.json();
+    setUser(data.user);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
   };
 
   const logout = () => {
-    setUser(null);
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setUser(null);
   };
-
-  useEffect(() => {
-    // Можно добавить логику проверки токена, автообновления и т.п.
-  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
-
+// Вот кастомный хук для удобного доступа к контексту
+export const useAuth = () => useContext(AuthContext);
